@@ -1,11 +1,5 @@
 {
     "name": "Hot Ham Water",
-    "ingredients": [
-        "1 pot water",
-        "1 can ham"
-    ],
-    "instructions": [
-        "1. Boil water",
-        "2. Add ham"
-    ]
+    "ingredients": "1 pot water, 1 can ham",
+    "instructions": "1. Boil water, 2. Add ham"
 }

@@ -1,13 +1,5 @@
 {
     "name": "Grilled Cheese",
-    "ingredients": [
-        "1 tb butter",
-        "2 slices bread",
-        "3 slices American cheese"
-    ],
-    "instructions": [
-        "1. Toast two slice of bread in a half tablespoon of butter",
-        "2. Place cheese between toasted slices of bread",
-        "3. Toast the remaining un-toasted sides of the sandwich in the remaining butter"
-    ]
+    "ingredients": "1 tb butter",
+    "instructions": "Toast the bread in butter, and add the cheese"
 }
