@@ -25,28 +25,33 @@ async function saveRecipe(recipe){
   })
 }
 
+async function deleteRecipe(filename){
+  const filepath = './public/recipes'
+  fs.unlink(filepath + filename, err=>{
+    if (err) throw err;
+  })
+}
+
 function cleanString(inStr){
   const resChars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*', '.']
   const outStr = inStr.replace(/[<>:"/\\|?*.]/g, '');
   return outStr.toLowerCase()
 }
 
-/* GET users listing. */
+// INDEX route
 router.get('/', (req, res, next)=>{
   const recipes = getRecipes()
   res.json({recipes})
 });
 
+// CREATE route
 router.post('/', (req, res)=>{
-  console.log("Receiving:", req.body.recipe)
   const recipe = req.body.recipe
   // Save recipe as a JSON
   saveRecipe(recipe)
     .then(()=>{
       try {
-        console.log("getting recipes")
         const recipes = getRecipes()
-        console.log(recipes)
         return res.status(200).json({recipes})
       } catch(err) {
         console.warn(err)
@@ -55,6 +60,15 @@ router.post('/', (req, res)=>{
     })
     .catch(err=>res.status(406).json({status:err}))
     
+})
+
+// DESTROY route
+router.delete('/recipes/:id', (req, res)=>{
+  console.log('destroy', req.params.id)
+  // const recipes = getRecipes()
+  // const filename = recipes[req.params.id]
+  // console.log(filename)
+  res.status(204).redirect('/')
 })
 
 module.exports = router;
