@@ -44,6 +44,12 @@ router.get('/', (req, res, next)=>{
   res.json({recipes})
 });
 
+// SHOW route
+router.get('/:id', (req, res)=>{
+  console.log('SHOW hit', req.params.id)
+  res.status(200).send("show")
+})
+
 // CREATE route
 router.post('/', (req, res)=>{
   const recipe = req.body.recipe
@@ -63,12 +69,19 @@ router.post('/', (req, res)=>{
 })
 
 // DESTROY route
-router.delete('/recipes/:id', (req, res)=>{
-  console.log('destroy', req.params.id)
+router.delete('/:id', (req, res)=>{
+  console.log('Receiving DELETE request, ID', req.params.id)
+  try {
+    const recipes = getRecipes()
+    console.log("Sending DELETE response for", recipes[req.params.id].name)
+    res.status(200).send("Deleted " + recipes[req.params.id].name)
+  } catch(err) {
+    console.log(err)
+    res.status(406).send(err)
+  }
   // const recipes = getRecipes()
   // const filename = recipes[req.params.id]
   // console.log(filename)
-  res.status(204).redirect('/')
 })
 
 module.exports = router;
