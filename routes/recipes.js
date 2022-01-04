@@ -12,7 +12,7 @@ function getRecipes() {
       if (err) throw err;
     })
     const recipe = JSON.parse(file)
-    return recipe
+    return {"recipe": recipe, "filename": filename}
   })
   return recipes
 }
@@ -26,9 +26,12 @@ async function saveRecipe(recipe){
 }
 
 async function deleteRecipe(filename){
-  const filepath = './public/recipes'
+  const filepath = './public/recipes/'
   fs.unlink(filepath + filename, err=>{
-    if (err) throw err;
+    if (err) {
+      console.warn("delete err")
+      throw err
+    };
   })
 }
 
@@ -41,6 +44,7 @@ function cleanString(inStr){
 // INDEX route
 router.get('/', (req, res, next)=>{
   const recipes = getRecipes()
+  console.log({recipes})
   res.json({recipes})
 });
 
@@ -70,14 +74,25 @@ router.post('/', (req, res)=>{
 
 // DESTROY route
 router.delete('/:id', (req, res)=>{
-  console.log('Receiving DELETE request, ID', req.params.id)
   try {
     const recipes = getRecipes()
-    console.log("Sending DELETE response for", recipes[req.params.id].name)
-    res.status(200).send("Deleted " + recipes[req.params.id].name)
+    const recipeId = req.params.id
+    const recipeFilename = recipes[recipeId].filename
+    console.log("Deleting recipe " + recipeId + ":", recipeFilename)
+    deleteRecipe(recipeFilename)
+      .then(()=>{
+        // Update the recipes array, and return
+        recipes.splice(recipeId, 1)
+        console.log({recipes})
+        res.status(200).json({recipes})
+      })
+      .catch(err => {
+        console.warn(err)
+        res.status(406).send(err)
+      })
   } catch(err) {
-    console.log(err)
-    res.status(406).send(err)
+    console.warn(err)
+    res.status(400).send(err)
   }
   // const recipes = getRecipes()
   // const filename = recipes[req.params.id]
