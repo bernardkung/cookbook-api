@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs')
 
+function refreshIndex(){
+  // Find index file (as arg?)
+  // Refresh the index file with the current list of recipe files
+}
 
 function getRecipes() {
   const recipesFiles = fs.readdirSync('./public/recipes', err=>{
@@ -25,13 +29,32 @@ async function saveRecipe(recipe){
   })
 }
 
+async function updateRecipe(recipe, recipeId){
+  try {
+    const recipes = getRecipes()
+    const filepath = './public/recipes/'
+    const old_filename = recipes[recipeId] + ".json"
+    const new_filename = cleanString(recipe.name) + ".json"
+
+    // Delete old recipe
+    fs.unlink(filepath + old_filename, err=>{
+      if (err) {throw err}
+    })
+    // Add new recipe
+    await fs.promises.writeFile(filepath + new_filename, JSON.stringify(recipe), { flag: 'wx' }, (err)=>{
+      if (err) throw err;
+    })
+  } catch(err) {
+    throw err
+  }
+}
+
 async function deleteRecipe(filename){
   const filepath = './public/recipes/'
   fs.unlink(filepath + filename, err=>{
     if (err) {
-      console.warn("delete err")
       throw err
-    };
+    }
   })
 }
 
@@ -69,7 +92,22 @@ router.post('/', (req, res)=>{
       }
     })
     .catch(err=>res.status(406).json({status:err}))
-    
+})
+
+// UPDATE route
+router.put('/:id', (req, res)=>{
+  const recipe = req.body.recipe
+  updateRecipe(recipe, req.params.id)
+    .then(()=>{
+      try {
+        const recipes = getRecipes()
+        return res.status(200).json({recipes})
+      } catch(err) {
+        console.warn(err)
+        return res.status(400).json({status:"failed to refresh recipes"})
+      }
+    })
+    .catch(err=>res.status(406).send(err))
 })
 
 // DESTROY route
