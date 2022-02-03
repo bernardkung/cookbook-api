@@ -3,7 +3,9 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const cors = require("cors")
+const cors = require("cors");
+const mongoose = require('mongoose');
+require("dotenv").config({ path: "./.env" });
 
 const app = express();
 
@@ -25,6 +27,18 @@ const recipesRouter = require('./routes/recipes');
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/recipes', recipesRouter);
+
+
+const REACT_APP_ATLAS_URI=`mongodb+srv://${process.env.REACT_APP_USER_UID}:${process.env.REACT_APP_USER_PWD}@cookbook.zvip3.mongodb.net/cookbook?retryWrites=true&w=majority`
+
+mongoose.connect(REACT_APP_ATLAS_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+  .then(() => {
+      console.log("MongoDB connected...")
+  })
+  .catch(err => console.log(err));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

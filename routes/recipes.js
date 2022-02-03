@@ -1,32 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const fs = require('fs')
+const mongoose = require('mongoose');
 
-function refreshIndex(){
-  // Find index file (as arg?)
-  // Refresh the index file with the current list of recipe files
-}
+const recipeSchema = new mongoose.Schema({
+  name: String,
+  ingredients: String,
+  instructions: String,
+});
 
-function getRecipes() {
-  const recipesFiles = fs.readdirSync('./public/recipes', err=>{
-    if (err) throw err;
-  })
-  const recipes = recipesFiles.map(filename => {
-    const file = fs.readFileSync("./public/recipes/" + filename, err=>{
-      if (err) throw err;
-    })
-    const recipe = JSON.parse(file)
-    return {"recipe": recipe, "filename": filename}
+const Recipe = mongoose.model('Recipe', recipeSchema);
+
+async function getRecipes() {
+  const recipes = await Recipe.find({}, function (err, recipes){
+    if (err) {
+      console.log(err);
+    }
   })
   return recipes
 }
 
 async function saveRecipe(recipe){
-  const filepath = './public/recipes/'
-  const filename =  cleanString(recipe.name) + ".json"
-  await fs.promises.writeFile(filepath + filename, JSON.stringify(recipe), { flag: 'wx' }, (err)=>{
-    if (err) throw err;
-  })
+  console.log(recipe)
+  // const newRecipe = new Recipe({recipe})
+    // saved!
+  // Recipe.create(recipe, err=>{
+  //   if (err) {console.log(err)}
+  // })
 }
 
 async function updateRecipe(recipe, recipeId){
@@ -65,10 +65,10 @@ function cleanString(inStr){
 }
 
 // INDEX route
-router.get('/', (req, res, next)=>{
-  const recipes = getRecipes()
-  console.log({recipes})
-  res.json({recipes})
+router.get('/', async (req, res, next)=>{
+  const recipes = await Recipe.find({})
+  console.log(recipes)
+  res.status(200).json({recipes})
 });
 
 // SHOW route
@@ -80,18 +80,20 @@ router.get('/:id', (req, res)=>{
 // CREATE route
 router.post('/', (req, res)=>{
   const recipe = req.body.recipe
+  console.log(recipe)
   // Save recipe as a JSON
-  saveRecipe(recipe)
-    .then(()=>{
-      try {
-        const recipes = getRecipes()
-        return res.status(200).json({recipes})
-      } catch(err) {
-        console.warn(err)
-        return res.status(400).json({status:"failed to refresh recipes"})
-      }
-    })
-    .catch(err=>res.status(406).json({status:err}))
+  Recipe.create({recipe}, err=>{
+    if (err) {
+      console.warn(err)
+      return res.status(400).json({status:"failed to refresh recipes"})
+    }
+    try {
+      const recipes = Recipe.find({})
+      return res.status(200).json({recipes})
+    } catch {
+      console.log("error")
+    }
+  })
 })
 
 // UPDATE route
