@@ -7,6 +7,9 @@ const recipeSchema = new mongoose.Schema({
   name: String,
   ingredients: String,
   instructions: String,
+},
+{
+  timestamps: true
 });
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
@@ -67,7 +70,6 @@ function cleanString(inStr){
 // INDEX route
 router.get('/', async (req, res, next)=>{
   const recipes = await Recipe.find({})
-  console.log(recipes)
   res.status(200).json({recipes})
 });
 
@@ -78,21 +80,30 @@ router.get('/:id', (req, res)=>{
 })
 
 // CREATE route
-router.post('/', (req, res)=>{
+router.post('/', async (req, res)=>{
+  // try {
+  //   const recipe = req.body.recipe
+  //   const newRecipe = new Recipe({...recipe})
+  //   console.log(newRecipe)
+  //   await newRecipe.save()
+  //     .then(async ()=>{
+  //       const recipes = await Recipe.find({})
+  //       return res.status(200).json({recipes})
+  //     })
+  // } catch (err) {
+  //   console.warn(err)
+  //   return res.status(400).json({status:"failed to refresh recipes"})
+  // }
+
   const recipe = req.body.recipe
-  console.log(recipe)
-  // Save recipe as a JSON
-  Recipe.create({recipe}, err=>{
+  await Recipe.create({...recipe}, async (err)=>{
     if (err) {
       console.warn(err)
-      return res.status(400).json({status:"failed to refresh recipes"})
+      return res.status(400).json({err})
     }
-    try {
-      const recipes = Recipe.find({})
-      return res.status(200).json({recipes})
-    } catch {
-      console.log("error")
-    }
+    // no error
+    const recipes = await Recipe.find({})
+    return res.status(200).json({recipes})
   })
 })
 
