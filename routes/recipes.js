@@ -70,7 +70,7 @@ function cleanString(inStr){
 // INDEX route
 router.get('/', async (req, res, next)=>{
   const recipes = await Recipe.find({})
-  res.status(200).json({recipes})
+  return res.status(200).json({recipes})
 });
 
 // SHOW route
@@ -81,73 +81,51 @@ router.get('/:id', (req, res)=>{
 
 // CREATE route
 router.post('/', async (req, res)=>{
-  // try {
-  //   const recipe = req.body.recipe
-  //   const newRecipe = new Recipe({...recipe})
-  //   console.log(newRecipe)
-  //   await newRecipe.save()
-  //     .then(async ()=>{
-  //       const recipes = await Recipe.find({})
-  //       return res.status(200).json({recipes})
-  //     })
-  // } catch (err) {
-  //   console.warn(err)
-  //   return res.status(400).json({status:"failed to refresh recipes"})
-  // }
-
-  const recipe = req.body.recipe
-  await Recipe.create({...recipe}, async (err)=>{
-    if (err) {
-      console.warn(err)
-      return res.status(400).json({err})
-    }
-    // no error
+  try {
+    const recipe = req.body
+    console.log("post", recipe)
+    const recipeDoc = new Recipe(recipe)
+    await recipeDoc.save()
+  
+    // Reload recipes
     const recipes = await Recipe.find({})
     return res.status(200).json({recipes})
-  })
+  } catch(err) {
+    console.warn(err)
+    return res.status(400).json({err})
+  }
 })
 
 // UPDATE route
-router.put('/:id', (req, res)=>{
-  const recipe = req.body.recipe
-  updateRecipe(recipe, req.params.id)
-    .then(()=>{
-      try {
-        const recipes = getRecipes()
-        return res.status(200).json({recipes})
-      } catch(err) {
-        console.warn(err)
-        return res.status(400).json({status:"failed to refresh recipes"})
-      }
-    })
-    .catch(err=>res.status(406).send(err))
-})
-
-// DESTROY route
-router.delete('/:id', (req, res)=>{
+router.put('/:id', async (req, res)=>{
   try {
-    const recipes = getRecipes()
-    const recipeId = req.params.id
-    const recipeFilename = recipes[recipeId].filename
-    console.log("Deleting recipe " + recipeId + ":", recipeFilename)
-    deleteRecipe(recipeFilename)
-      .then(()=>{
-        // Update the recipes array, and return
-        recipes.splice(recipeId, 1)
-        console.log({recipes})
-        res.status(200).json({recipes})
-      })
-      .catch(err => {
-        console.warn(err)
-        res.status(406).send(err)
-      })
+    // Update the recipe
+    const recipe = req.body
+    const recipeDoc = await Recipe.findOne({_id:recipe._id})
+      recipeDoc.name = recipe.name
+      recipeDoc.ingredients = recipe.ingredients
+      recipeDoc.instructions = recipe.instructions
+    await recipeDoc.save()
+
+    // Reload recipes
+    const recipes = await Recipe.find({})
+    return res.status(200).json({recipes})
   } catch(err) {
     console.warn(err)
-    res.status(400).send(err)
+    return res.status(400).json({err})
   }
-  // const recipes = getRecipes()
-  // const filename = recipes[req.params.id]
-  // console.log(filename)
+})  
+
+// DESTROY route
+router.delete('/:id', async (req, res)=>{
+  Recipe.findByIdAndDelete(req.params.id, async (err)=>{
+    if (err) {
+      return res.status(400).json({err})
+    }
+    // Reload recipes
+    const recipes = await Recipe.find({})
+    return res.status(200).json({recipes})
+  })
 })
 
 module.exports = router;
