@@ -3,16 +3,9 @@ const router = express.Router();
 const fs = require('fs')
 const mongoose = require('mongoose');
 
-const recipeSchema = new mongoose.Schema({
-  name: String,
-  ingredients: String,
-  instructions: String,
-},
-{
-  timestamps: true
-});
+const Recipe = require('../models/recipe')
 
-const Recipe = mongoose.model('Recipe', recipeSchema);
+// const Recipe = mongoose.model('Recipe', recipeSchema);
 
 async function getRecipes() {
   const recipes = await Recipe.find({}, function (err, recipes){
