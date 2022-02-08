@@ -7,58 +7,20 @@ const Recipe = require('../models/recipe')
 
 // const Recipe = mongoose.model('Recipe', recipeSchema);
 
+function errorHandler(err) {
+  console.warn(err)
+  throw(err)
+}
+
 async function getRecipes() {
-  const recipes = await Recipe.find({}, function (err, recipes){
-    if (err) {
-      console.log(err);
-    }
-  })
-  return recipes
-}
-
-async function saveRecipe(recipe){
-  console.log(recipe)
-  // const newRecipe = new Recipe({recipe})
-    // saved!
-  // Recipe.create(recipe, err=>{
-  //   if (err) {console.log(err)}
-  // })
-}
-
-async function updateRecipe(recipe, recipeId){
   try {
-    const recipes = getRecipes()
-    const filepath = './public/recipes/'
-    const old_filename = recipes[recipeId] + ".json"
-    const new_filename = cleanString(recipe.name) + ".json"
-
-    // Delete old recipe
-    fs.unlink(filepath + old_filename, err=>{
-      if (err) {throw err}
-    })
-    // Add new recipe
-    await fs.promises.writeFile(filepath + new_filename, JSON.stringify(recipe), { flag: 'wx' }, (err)=>{
-      if (err) throw err;
-    })
+    const recipes = await Recipe.find({})
+    return recipes
   } catch(err) {
-    throw err
+    errorHandler(err)
   }
 }
 
-async function deleteRecipe(filename){
-  const filepath = './public/recipes/'
-  fs.unlink(filepath + filename, err=>{
-    if (err) {
-      throw err
-    }
-  })
-}
-
-function cleanString(inStr){
-  const resChars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*', '.']
-  const outStr = inStr.replace(/[<>:"/\\|?*.]/g, '');
-  return outStr.toLowerCase()
-}
 
 // INDEX route
 router.get('/', async (req, res, next)=>{
