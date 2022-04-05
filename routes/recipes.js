@@ -94,18 +94,41 @@ router.post('/', async (req, res)=>{
 
 // UPDATE route
 router.put('/:id', async (req, res)=>{
+  console.log("put route")
   try {
-    // Update the recipe
+    // Set recipe
     const recipe = req.body
-    const recipeDoc = await Recipe.findOne({_id:recipe._id})
-      recipeDoc.name = recipe.name
-      recipeDoc.ingredients = recipe.ingredients
-      recipeDoc.instructions = recipe.instructions
-    await recipeDoc.save()
+    console.log(req.params)
+    // Insert recipe
+    db.run(`
+        UPDATE recipes 
+        SET name= COALESCE(?, name),
+            ingredients= COALESCE(?, name),
+            instructions= COALESCE(?, instructions)
+        WHERE id=?
+      `, 
+      [recipe.name, recipe.ingredients, recipe.instructions, recipe.id],
+      function(err) {
+        if (err) {
+          console.error(err.message)
+          return res.status(400).json({err})
+      }
+      // Post insert code
+      console.log(`Row ${this.lastID} updated`);
+    })
 
-    // Reload recipes
-    const recipes = await Recipe.find({})
-    return res.status(200).json({recipes})
+    // Refresh recipes
+    let sql = `SELECT * FROM recipes`;
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        throw err;
+      }
+      // Return refreshed recipe list
+      res.status(200).json({
+        "message":"success",
+        "data":rows
+      })
+    })
   } catch(err) {
     console.warn(err)
     return res.status(400).json({err})
@@ -114,14 +137,39 @@ router.put('/:id', async (req, res)=>{
 
 // DESTROY route
 router.delete('/:id', async (req, res)=>{
-  Recipe.findByIdAndDelete(req.params.id, async (err)=>{
-    if (err) {
-      return res.status(400).json({err})
-    }
-    // Reload recipes
-    const recipes = await Recipe.find({})
-    return res.status(200).json({recipes})
-  })
+  console.log('destroy route')
+  // delete recipe
+  try {
+    db.run(`
+        DELETE FROM recipes 
+        WHERE id=?
+      `,
+      [req.params.id],
+      function(err) {
+        if (err) {
+          console.error(err.message)
+          return res.status(400).json({err})
+      }
+      // Post insert code
+      console.log(`Row ${this.lastID} deleted`);
+    })
+
+    // Refresh recipes
+    let sql = `SELECT * FROM recipes`;
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        throw err;
+      }
+      // Return refreshed recipe list
+      res.status(200).json({
+        "message":"success",
+        "data":rows
+      })
+    })
+  } catch(err) {
+    console.warn(err)
+    return res.status(400).json({err})
+  }
 })
 
 module.exports = router;
